@@ -18,8 +18,6 @@ void ExplainScene();
 void InGameScene();
 void OverScene();
 
-bool is_init = false;
-
 int main(int argc, char *argv[])
 {
 	InitClient();
@@ -59,8 +57,7 @@ int InitClient()
 	//서버 관련 초기화
 	ConnectServer();
 	signal(SIGUSR1,ReceiveMessage);
-	SendMessageToServer(PRINT_LOG);		
-
+	
 	//초기 ID 입력
 	mvprintw(LINES/2, 5,"%s \n",msg);
 	mvscanw(LINES/2 + 1, 5, "%s", inputID);
@@ -245,25 +242,6 @@ int InputManager()
 			}
 			key = 0;
 		}
-		else if(serverData->nowScene == WIN_CHASER)
-		{
-			if(key == 'f' || key == ' ')
-			{
-				SendMessageToServer(END_INPUT);
-				break;
-			}
-			key = 0;
-		}
-		else if(serverData->nowScene == WIN_RUNNER)
-		{
-			if(key == 'f' || key == ' ')
-			{
-				SendMessageToServer(END_INPUT);
-				break;
-			}
-			key = 0;
-
-		}
 	}
 }
 
@@ -352,12 +330,11 @@ void PrintInstruction(){
 
 void MainScene(){
 	char* msg = "[ 2인용 추격 & 생존 미니게임 ]";
-	clear();
 	PrintLogo(5,0);
 
 	mvprintw(13,(SCREEN_WIDTH - strlen(msg))/2 + 5,"%s", msg);
 
-	msg = "-PRESS ANY KEY TO START-";
+	msg = "-PRESS ANY KEY TO STRRT-";
     mvprintw(22,(SCREEN_WIDTH - strlen(msg))/2 ,"%s", msg);
 	refresh();
 }
@@ -385,13 +362,13 @@ void MapScene(){
 	msg = "[ Press ‘3’: 흩뿌려진 강박증 ]";
 	mvprintw(21,3 ,"%s", msg);
 	PrintLogo(5,0);
-	is_init = false;
 	refresh();
 }
 
 void InGameScene()
 {
 	int x, y;
+	static bool is_init = false;
 	static int stageBefore[SCREEN_HEIGHT][SCREEN_WIDTH];
 	
 	if(!is_init){
@@ -441,13 +418,16 @@ void InGameScene()
 
 void OverScene(int n) {
     const char* msg1 = "※ 아무 키나 눌러 메인화면으로 이동 ※";
-    const char* msg2 = (n == CHASER) ? "[ CHASER 승리! ]" : "[ RUNNER 승리! ]";
+    const char* msg2 = (n == CHASER) ? "[ 1ND PLAYER 승리! ]" : "[ 2ND PLAYER 승리! ]";
 	clear();
 	
     mvprintw(21, (SCREEN_WIDTH - strlen(msg1))/2 + 9, "%s", msg1);
 	
 	move(19, (SCREEN_WIDTH - strlen(msg2))/2 + 2);
     // 승리 메시지 출력
+    attron(COLOR_PAIR(n));
+    addch(ACS_DIAMOND);
+    attroff(COLOR_PAIR(n));
 	printw("%s", msg2); 
 	refresh();
 

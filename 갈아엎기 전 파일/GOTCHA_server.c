@@ -71,7 +71,7 @@ int CreateSharedMemory()
 		perror("SHM - Key error");
 		exit(1);
 	}
-	shm_id = shmget(shm_key, sizeof(ServerData), IPC_CREAT|0777);
+	shm_id = shmget(shm_key, sizeof(ServerData), IPC_CREAT|0666);
 	printf("%d\n", sizeof(ServerData));
 	if(shm_id == -1)
 	{
@@ -98,7 +98,7 @@ int CreateSharedMemory()
 			perror("Player, SHM - Key error");
 			exit(1);
 		}
-		shm_id = shmget(shm_key, sizeof(PlayerData), IPC_CREAT|0777);
+		shm_id = shmget(shm_key, sizeof(PlayerData), IPC_CREAT|0666);
 		if(shm_id == -1)
 		{
 			perror("Player, SHM - ID error");
@@ -310,29 +310,10 @@ int PerformMessage(Message msg)
 				}
 				serverData->turn++;
 				PlayerMove();
-				if(serverData->nowScene != INGAME)
-				{
-					serverData->turn = 0;
-					playerData[CHASER]->direction = NONE;
-					playerData[RUNNER]->direction = NONE;
-					SendMessageToClient(RUNNER, UPDATE_SCREEN);
-					SendMessageToClient(CHASER, UPDATE_SCREEN_AND_INPUT);
-					break;
-				}
 				playerData[CHASER]->direction = NONE;
 				playerData[RUNNER]->direction = NONE;
 				SendMessageToClient(RUNNER, UPDATE_SCREEN_AND_INPUT);
 				SendMessageToClient(CHASER, UPDATE_SCREEN_AND_INPUT);
-				break;
-			case WIN_CHASER:
-				serverData->nowScene = LOBBY;
-				SendMessageToClient(RUNNER, UPDATE_SCREEN);
-				SendMessageToClient(CHASER, UPDATE_SCREEN_AND_INPUT);	
-				break;
-			case WIN_RUNNER:
-				serverData->nowScene = LOBBY;
-				SendMessageToClient(RUNNER, UPDATE_SCREEN);
-				SendMessageToClient(CHASER, UPDATE_SCREEN_AND_INPUT);	
 				break;
 		}
 	}
@@ -438,8 +419,6 @@ int PlayerMove()
 	printf("playerMove Check\n");
 	for(int i=0; i<serverData->playerCount; i++)
 	{
-		dirX = 0;
-		dirY = 0;
 		switch(playerData[i]->direction)
 		{
 			case UP:
@@ -498,7 +477,7 @@ int PlayerMove()
 			}
 			if(playerData[i]->x == playerData[j]->x && playerData[i]->y == playerData[j]->y)
 			{
-				if(playerData[i]->role != playerData[j]->role)
+				if(playerData[i]->role != playerData[i]->role)
 				{
 					 //패배
 					serverData->nowScene = WIN_CHASER;
